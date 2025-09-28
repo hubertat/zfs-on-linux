@@ -269,18 +269,10 @@ ZFS usually expects a bootfs property on the pool:
 sudo zpool set bootfs=rpool-pi5/ROOT/debian rpool-pi5
 ```
 
-## 3. Adjust /etc/default/zfs
-
-Inside the new root, check:
+## Set cache file
 ```
-cat /etc/default/zfs | grep ZFS_INITRD
+zpool set cachefile=/etc/zfs/zpool.cache rpool
 ```
-It should have:
-```
-ZFS_INITRD_ADDITIONAL_DATASETS="rpool-pi5/ROOT/debian"
-```
-If not, add it and re-run update-initramfs.
-
 
 ## 4. Adjust /etc/fstab in the new root
 
@@ -313,4 +305,30 @@ In `/boot/firmware/config.txt` (check kernel and initramfs versions):
 [pi5]
 kernel=kernel_2712.img
 initramfs initramfs_2712
+```
+
+## Troubleshooting
+
+### zfs root double mount error
+If there is an error, when during boot system stops in initramfs and shows two same commands to mount zfs root, then it needs just `exit` to continue read here:
+File `/etc/default/zfs` should NOT have this:
+```
+ZFS_INITRD_ADDITIONAL_DATASETS="rpool-XXX/ROOT/debian"
+```
+and rebuild initramfs after this:
+```
+sudo update-initramfs -c -k all
+```
+It was a llm mistake with preparing instructions, this is a reason initramfs tries to mount it twice!
+
+
+### no zfs support in initramfs
+If there is no zfs support when booting in initramfs, commands like `zpool` and `zfs` are not working, make sure the ZFS module is included in initramfs modules:
+```
+cat /etc/initramfs-tools/modules | grep zfs
+```
+
+If not there, add it:
+```
+echo zfs | tee -a /etc/initramfs-tools/modules
 ```

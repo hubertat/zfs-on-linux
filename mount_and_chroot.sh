@@ -11,21 +11,21 @@ fi
 # Copy DNS configuration if requested
 if [ "$COPY_DNS" = true ]; then
     echo "Copying DNS configuration..."
-    sudo mkdir -p "$MOUNT_POINT/etc"
-    sudo cp -L /etc/resolv.conf "$MOUNT_POINT/etc/resolv.conf"
-    sudo cp -L /etc/hosts "$MOUNT_POINT/etc/hosts"
+    mkdir -p "$MOUNT_POINT/etc"
+    cp -L /etc/resolv.conf "$MOUNT_POINT/etc/resolv.conf"
+    cp -L /etc/hosts "$MOUNT_POINT/etc/hosts"
 fi
 
 # Bind-mount essential virtual filesystems
-sudo mount -t proc /proc "$MOUNT_POINT/proc"
-sudo mount --rbind /sys "$MOUNT_POINT/sys"
-sudo mount --make-rslave "$MOUNT_POINT/sys"
-sudo mount --rbind /dev "$MOUNT_POINT/dev"
-sudo mount --make-rslave "$MOUNT_POINT/dev"
-sudo mount --rbind /run "$MOUNT_POINT/run"
-sudo mount --make-rslave "$MOUNT_POINT/run"
+mount -t proc /proc "$MOUNT_POINT/proc"
+mount --rbind /sys "$MOUNT_POINT/sys"
+mount --make-rslave "$MOUNT_POINT/sys"
+mount --rbind /dev "$MOUNT_POINT/dev"
+mount --make-rslave "$MOUNT_POINT/dev"
+mount --rbind /run "$MOUNT_POINT/run"
+mount --make-rslave "$MOUNT_POINT/run"
 
 # Enter the chroot
-sudo chroot "$MOUNT_POINT" /bin/bash
+chroot "$MOUNT_POINT" /bin/bash
 
 echo "Exited chroot"

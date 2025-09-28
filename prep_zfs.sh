@@ -94,28 +94,28 @@ set_prop     "${ROOT_DATASET}" setuid "on"
 # /home
 set_prop     "${HOME_DS}" compression "${HOME_COMP}"
 set_prop     "${HOME_DS}" atime "off"
-set_prop     "${HOME_DS}" canmount "noauto"
+set_prop     "${HOME_DS}" canmount "on"
 set_prop     "${HOME_DS}" exec "on"
 set_prop     "${HOME_DS}" setuid "on"
 
 # /var
 inherit_prop "${VAR_DS}" compression
 set_prop     "${VAR_DS}" atime "off"
-set_prop     "${VAR_DS}" canmount "noauto"
+set_prop     "${VAR_DS}" canmount "on"
 set_prop     "${VAR_DS}" exec "on"
 set_prop     "${VAR_DS}" setuid "on"
 
 # /var/log (hardened)
 set_prop     "${LOG_DS}" compression "${LOG_COMP}"
 set_prop     "${LOG_DS}" atime "off"
-set_prop     "${LOG_DS}" canmount "noauto"
+set_prop     "${LOG_DS}" canmount "on"
 set_prop     "${LOG_DS}" exec "off"
 set_prop     "${LOG_DS}" setuid "off"
 
 # /tmp (hardened; sticky to be handled when actually mounted)
 set_prop     "${TMP_DS}" compression "${TMP_COMP}"
 set_prop     "${TMP_DS}" atime "off"
-set_prop     "${TMP_DS}" canmount "noauto"
+set_prop     "${TMP_DS}" canmount "on"
 set_prop     "${TMP_DS}" exec "on"      # change to off if you want stricter policy
 set_prop     "${TMP_DS}" setuid "off"
 
@@ -126,4 +126,3 @@ zfs list -r "${POOL}" || true
 echo
 echo "Key props:"
 zfs get -r mountpoint,canmount,compression,atime,exec,setuid "${POOL}"
-

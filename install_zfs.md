@@ -5,9 +5,11 @@ From [https://forums.raspberrypi.com/viewtopic.php?t=334421]:
 
 *The below procedure always has worked for me on RPi 3's and 4's*
 
+Same for host and chroot inside new root.
+
 ```
 sudo apt update
-sudo apt install raspberrypi-kernel-headers zfs-dkms zfsutils-linux -y
+sudo apt install raspberrypi-kernel raspberrypi-kernel-headers zfs-dkms zfs-initramfs zfsutils-linux -y
 sudo apt full-upgrade -y
 sudo reboot
 ```
@@ -27,6 +29,14 @@ On another fresh install I did above and still got problems to `modprobe zfs`, t
 sudo dkms autoinstall
 sudo modprobe zfs
 ```
+
+## inside new root (chroot raspberry)
+Ensure the ZFS module is included
+```
+echo zfs | sudo tee -a /etc/initramfs-tools/modules
+```
+
+
 
 # install zfs on debian (general, intel/amd)
 

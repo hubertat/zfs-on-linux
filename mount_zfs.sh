@@ -8,28 +8,23 @@ fi
 POOL="$1"
 ROOT_DS="$POOL/ROOT/debian"
 
-# Load ZFS module
-sudo modprobe zfs
-
-# Import pool without auto-mounting
-sudo zpool import -N "$POOL"
 
 # Prepare mountpoint
-sudo mkdir -p /mnt/newroot
-sudo mkdir -p /mnt/newroot/{home,tmp,var,var/log}
+mkdir -p /mnt/newroot
+mkdir -p /mnt/newroot/{home,tmp,var,var/log}
 
 # Set mountpoints
-sudo zfs set mountpoint=/mnt/newroot "$ROOT_DS"
-sudo zfs set mountpoint=/mnt/newroot/home "$POOL/home"
-sudo zfs set mountpoint=/mnt/newroot/tmp "$POOL/tmp"
-sudo zfs set mountpoint=/mnt/newroot/var "$POOL/var"
-sudo zfs set mountpoint=/mnt/newroot/var/log "$POOL/var/log"
+zfs set mountpoint=/mnt/newroot "$ROOT_DS"
+zfs set mountpoint=/mnt/newroot/home "$POOL/home"
+zfs set mountpoint=/mnt/newroot/tmp "$POOL/tmp"
+zfs set mountpoint=/mnt/newroot/var "$POOL/var"
+zfs set mountpoint=/mnt/newroot/var/log "$POOL/var/log"
 
 # Mount datasets
-sudo zfs mount "$ROOT_DS"
-sudo zfs mount "$POOL/home"
-sudo zfs mount "$POOL/tmp"
-sudo zfs mount "$POOL/var"
-sudo zfs mount "$POOL/var/log"
+zfs mount "$ROOT_DS"
+zfs mount "$POOL/home"
+zfs mount "$POOL/tmp"
+zfs mount "$POOL/var"
+zfs mount "$POOL/var/log"
 
 echo "ZFS datasets mounted to /mnt/newroot"
