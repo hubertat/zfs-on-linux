@@ -52,6 +52,27 @@ sudo zfs mount "$POOL/home"
 sudo zfs mount "$POOL/tmp"
 sudo zfs mount "$POOL/var"
 sudo zfs mount "$POOL/var/log"
+
+```
+
+### for raspberry - /boot/firmware
+
+still figuring this out, but definetely /boot (and) /boot/firmware or /boot/efi was missing in chrooted OS - making it impossible to correctly finish process.
+```
+# Mount the real boot partition into the right place
+sudo mkdir -p /mnt/newroot/boot/firmware
+sudo mount /dev/mmcblk0p1 /mnt/newroot/boot/firmware
+
+# Bind firmware onto /boot as well, so update-initramfs finds /boot/config-*
+sudo mount --bind /mnt/newroot/boot/firmware /mnt/newroot/boot
+```
+
+### for debian - /boot and /boot/efi
+
+Need to have /boot and /boot/efi partitions mounted in new root:
+```
+sudo mount /dev/mmcblk0p3 /mnt/newroot/boot
+sudo mount /dev/mmcblk0p1 /mnt/newroot/boot/efi/
 ```
 
 ### (Optional) Verify mounts:
@@ -98,6 +119,12 @@ sudo rsync -aAXHSxv \
   --delete \
   --exclude={"/boot/*","/dev/*","/proc/*","/sys/*","/run/*","/tmp/*","/mnt/*","/media/*","/lost+found"} \
   / /mnt/newroot
+```
+
+## Or debootstrap new system
+
+```
+sudo debootstrap stable /mnt/newroot http://deb.debian.org/debian/
 ```
 
 # Using `chroot` on Raspberry Pi OS / Debian
@@ -176,6 +203,34 @@ apt update
 apt install raspberrypi-kernel firmware-brcm80211
 ```
 
+In case of issues with certificates add to apt config `/etc/apt/apt.conf.d/ `:
+```
+// Do not verify peer certificate
+Acquire::https::Verify-Peer "false";
+// Do not verify that certificate name matches server name
+Acquire::https::Verify-Host "false";
+```
+
+And update certs:
+```
+# may need first:
+apt install ca-certificates gnupg
+# and
+update-ca-certificates
+```
+
+Set hostname:
+```
+echo HOSTNAME > /etc/hostname
+```
+
+Install and reconfig locales:
+```
+apt install --yes locales
+dpkg-reconfigure locales
+dpkg-reconfigure tzdata
+```
+
 Exit when done:
 ```
 exit
@@ -250,3 +305,12 @@ console=serial0,115200 console=tty1 root=ZFS=rpool-pi5/ROOT/debian rootfstype=zf
 ```
 
 Keep all other options from your original cmdline.txt. Just replace the old root=PARTUUID=... with root=ZFS=....
+
+## 6. More config
+
+In `/boot/firmware/config.txt` (check kernel and initramfs versions):
+```
+[pi5]
+kernel=kernel_2712.img
+initramfs initramfs_2712
+```
