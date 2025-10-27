@@ -35,3 +35,4 @@ zpool online -e tank /dev/da1
 # Verify everything
 zpool list
 zpool status tank
+```

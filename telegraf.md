@@ -1,0 +1,33 @@
+# Telegraf
+
+Telegraf config examples.
+
+##  Raspberry Pi examples
+
+### cpu&gpu temps
+
+From [https://github.com/TheMickeyMike/raspberrypi-temperature-telegraf]:
+
+```
+[[inputs.file]]
+  files = ["/sys/class/thermal/thermal_zone0/temp"]
+  name_override = "cpu_temperature"
+  data_format = "value"
+  data_type = "integer"
+
+[[inputs.exec]]
+  commands = [ "replace_with_vcgencmd_location measure_temp" ]
+  name_override = "gpu_temperature"
+  data_format = "grok"
+  grok_patterns = ["%{NUMBER:value:float}"]
+```
+
+To locate `vcgencmd`:
+```
+/usr/bin/which vcgencmd
+```
+In *pifive* os it is: `/usr/bin/vcgencmd`
+
+### full example config
+
+Whole config from previous systems:
