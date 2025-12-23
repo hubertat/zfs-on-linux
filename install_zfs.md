@@ -46,8 +46,8 @@ Update apt, remember to add non-free sources, contrib etc.
 Install packages:
 ```
 sudo apt update
-sudo apt install linux-headers-amd64 zfsutils-linux dpkg-dev linux-image-amd64
-sudo apt install zfs-initramfs
+sudo apt install linux-headers-amd64 dpkg-dev linux-image-amd64
+sudo apt install zfs-initramfs zfsutils-linux zfs-dkms
 ```
 
 In case of problems with zfs module, try:
