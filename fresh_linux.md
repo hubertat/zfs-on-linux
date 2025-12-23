@@ -12,7 +12,7 @@ infocmp -x | ssh [hostname|ip] -- tic -x -
 First update apt, download tmux (so longer upgrades can be done in detached mode) and some basic stuff, then upgrade:
 ```
 sudo apt update
-sudo apt install tmux git tree joe
+sudo apt install tmux git tree joe sudo
 ```
 
 Enter tmux session:
@@ -24,6 +24,14 @@ Upgrade everything:
 ```
 sudo apt update
 sudo apt upgrade
+```
+
+### add user to sudoers
+
+When package `sudo` is installed you need add users to `sudo` group.
+Add user *hubert* (or other) to sudo:
+```
+usermod -aG sudo hubert
 ```
 
 ## when debootstrap - minimal Debian
