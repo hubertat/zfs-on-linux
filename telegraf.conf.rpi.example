@@ -107,11 +107,11 @@
   ## Multiple URLs can be specified for a single cluster, only ONE of the
   ## urls will be written to each interval.
   ##   ex: urls = ["https://us-west-2-1.aws.cloud2.influxdata.com"]
-  urls = ["http://10.100.80.44:8086"]
+  urls = ["http://URL_HERE:8086"]
   ## Token for authentication.
   token = "===TOKEN HERE======="
   ## Organization is the name of the organization you wish to write to; must exist.
-  organization = "brynsk"
+  organization = "ORG_HERE"
   ## Destination bucket to write into.
   bucket = "systems"
   ## The value of this tag will be used to determine the bucket.  If this
@@ -243,7 +243,7 @@
   data_type = "integer"
 
 [[inputs.exec]]
-  commands = [ "/opt/vc/bin/vcgencmd measure_temp" ]
+  commands = [ "/usr/bin/vcgencmd measure_temp" ]
   name_override = "gpu_temperature"
   data_format = "grok"
   grok_patterns = ["%{NUMBER:value:float}"]
