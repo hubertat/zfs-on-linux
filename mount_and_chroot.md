@@ -72,11 +72,34 @@ sudo mount --bind /mnt/newroot/boot/firmware /mnt/newroot/boot
 
 ### for debian - /boot and /boot/efi
 
-Need to have /boot and /boot/efi partitions mounted in new root:
+`/boot` and the EFI System Partition (ESP) must both be mounted in the new
+root **before** entering the chroot and running a kernel, `initramfs-tools`,
+`grub-*`, or `shim-signed` package operation. `apt update` alone does not need
+them, but an upgrade that installs a kernel or GRUB does.
+
+Identify the ext4 `/boot` partition and the `vfat` ESP first; do not assume the
+partition numbers in this example match your system:
 ```
-sudo mount /dev/mmcblk0p3 /mnt/newroot/boot
-sudo mount /dev/mmcblk0p1 /mnt/newroot/boot/efi/
+lsblk -f
 ```
+
+Then mount them in the new root:
+```
+sudo mkdir -p /mnt/newroot/boot/efi
+sudo mount /dev/<boot-partition> /mnt/newroot/boot
+sudo mount /dev/<esp-partition> /mnt/newroot/boot/efi
+```
+
+Verify that the two paths are separate mounted filesystems, not merely
+directories in the ZFS root:
+```
+findmnt -T /mnt/newroot/boot
+findmnt -T /mnt/newroot/boot/efi
+```
+
+If the ESP is missing, `grub-install` fails with `cannot find EFI directory`.
+The kernel and initramfs may still be written to `/boot`, but the EFI GRUB/shim
+loader will not be updated.
 
 ### (Optional) Verify mounts:
 ```
@@ -266,6 +289,8 @@ sudo umount -l /mnt/newroot/run
 sudo umount -l /mnt/newroot/dev
 sudo umount -l /mnt/newroot/sys
 sudo umount -l /mnt/newroot/proc
+sudo umount /mnt/newroot/boot/efi
+sudo umount /mnt/newroot/boot
 sudo umount /mnt/newroot
 ```
 
@@ -294,9 +319,12 @@ zpool set cachefile=/etc/zfs/zpool.cache "$POOL"
 ## 4. Adjust /etc/fstab in the new root
 
 Your root dataset should not appear in /etc/fstab (it’s mounted by ZFS).
-Only things like /boot (your old boot partition) and maybe swap should be in fstab. Example:
+Only things like `/boot`, `/boot/efi`, and maybe swap should be in `fstab`. The
+ZFS root dataset itself should not. Record both boot filesystems so they are
+also mounted during future package upgrades. Example:
 ```
-PARTUUID=xxxx-yy  /boot  vfat  defaults  0  2
+UUID=<boot-filesystem-uuid>  /boot      ext4  defaults     0  2
+UUID=<esp-uuid>              /boot/efi  vfat  umask=0077  0  1
 ```
 
 ## 5. Edit /boot/cmdline.txt
