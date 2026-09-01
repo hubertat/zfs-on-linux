@@ -36,6 +36,9 @@ sudo mkdir -p /mnt/newroot/{home,tmp,var,var/log}
 ```
 
 ### Set mountpoints for a newroot
+> **Warning:** ZFS mountpoints are persistent dataset properties, not temporary
+> mount commands. Do not reboot while they point at `/mnt/newroot`; restore the
+> boot-safe values in the cleanup step below first.
 ```
 sudo zfs set mountpoint=/mnt/newroot        "$ROOT_DS"
 sudo zfs set mountpoint=/mnt/newroot/home    "$POOL/home"
@@ -91,13 +94,26 @@ sudo umount /mnt/newroot/home
 sudo umount /mnt/newroot
 ```
 
-### reset correct mountpoint for zfs datasets:
+### Restore boot-safe dataset properties
+Do this before rebooting. `-u` changes the property without trying to remount a
+busy root dataset (which is useful when repairing a system that was manually
+booted from initramfs).
 ```
-sudo zfs set mountpoint=/ "$ROOT_DS"
+sudo zfs set -u mountpoint=/ "$ROOT_DS"
 sudo zfs set mountpoint=/home "$POOL/home"
 sudo zfs set mountpoint=/tmp "$POOL/tmp"
 sudo zfs set mountpoint=/var "$POOL/var"
 sudo zfs set mountpoint=/var/log "$POOL/var/log"
+sudo zfs set canmount=noauto "$ROOT_DS"
+sudo zfs set canmount=noauto "$POOL/home"
+sudo zfs set canmount=noauto "$POOL/tmp"
+sudo zfs set canmount=noauto "$POOL/var"
+sudo zfs set canmount=noauto "$POOL/var/log"
+sudo zpool set bootfs="$ROOT_DS" "$POOL"
+
+# Verify the root configuration before rebuilding the initramfs or rebooting.
+sudo zpool get bootfs "$POOL"
+sudo zfs get mountpoint,canmount "$ROOT_DS"
 ```
 
 ### If you imported the pool in this session and want to detach it:
@@ -258,7 +274,7 @@ sudo umount /mnt/newroot
 
 Inside chroot:
 ```
-update-initramfs -c -k all
+update-initramfs -u -k all
 ```
 
 ## 2. Identify your root dataset
@@ -271,7 +287,7 @@ sudo zpool set bootfs=rpool-pi5/ROOT/debian rpool-pi5
 
 ## Set cache file
 ```
-zpool set cachefile=/etc/zfs/zpool.cache rpool
+zpool set cachefile=/etc/zfs/zpool.cache "$POOL"
 ```
 
 ## 4. Adjust /etc/fstab in the new root
@@ -317,7 +333,7 @@ ZFS_INITRD_ADDITIONAL_DATASETS="rpool-XXX/ROOT/debian"
 ```
 and rebuild initramfs after this:
 ```
-sudo update-initramfs -c -k all
+sudo update-initramfs -u -k all
 ```
 It was a llm mistake with preparing instructions, this is a reason initramfs tries to mount it twice!
 
@@ -330,5 +346,42 @@ cat /etc/initramfs-tools/modules | grep zfs
 
 If not there, add it:
 ```
-echo zfs | tee -a /etc/initramfs-tools/modules
+grep -qxF zfs /etc/initramfs-tools/modules || echo zfs | sudo tee -a /etc/initramfs-tools/modules
+```
+
+Then rebuild and verify the initramfs for the kernel that will boot:
+```
+sudo update-initramfs -u -k "$(uname -r)"
+lsinitramfs "/boot/initrd.img-$(uname -r)" | grep 'zfs.ko'
+```
+
+### pool was active on another system
+Only do this after the other system is fully powered off and no longer using
+the pool. At the initramfs shell, import the pool without mounting datasets and
+let the normal boot logic continue:
+```
+modprobe zfs
+zpool import -f -N rpool-pi5
+exit
+```
+Do not use `zpool import -F`: it can discard recent pool transactions.
+
+### root dataset cannot be mounted below `/mnt/newroot`
+This means a temporary migration mountpoint was left on the root dataset. At
+the initramfs shell, find the configured boot dataset and mount it at the
+initramfs handoff directory:
+```
+zpool get bootfs rpool-pi5
+mkdir -p /root
+mount -t zfs rpool-pi5/ROOT/debian /root
+exit
+```
+After booting, restore the persistent properties without remounting the busy
+root dataset, then rebuild the initramfs:
+```
+ROOT_DS=$(zpool get -H -o value bootfs rpool-pi5)
+sudo zfs set -u mountpoint=/ "$ROOT_DS"
+sudo zfs set canmount=noauto "$ROOT_DS"
+sudo zpool set bootfs="$ROOT_DS" rpool-pi5
+sudo update-initramfs -u -k "$(uname -r)"
 ```

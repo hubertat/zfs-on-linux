@@ -8,6 +8,9 @@ fi
 POOL="$1"
 ROOT_DS="$POOL/ROOT/debian"
 
+# This script changes persistent ZFS mountpoint properties.  Do not reboot
+# while they point below /mnt/newroot: run ./umount_zfs.sh "$POOL" first.
+echo "Temporarily changing persistent mountpoints; reset them with ./umount_zfs.sh $POOL before booting."
 
 # Prepare mountpoint
 mkdir -p /mnt/newroot
@@ -28,3 +31,4 @@ zfs mount "$POOL/var"
 zfs mount "$POOL/var/log"
 
 echo "ZFS datasets mounted to /mnt/newroot"
+echo "Before rebooting, run: ./umount_zfs.sh $POOL"

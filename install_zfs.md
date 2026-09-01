@@ -59,4 +59,23 @@ After this it should work:
 sudo modprobe zfs
 ```
 
+## Keep ZFS packages on one version
+
+Do not mix ZFS packages from Debian, Debian security, and backports. In
+particular, do not force DKMS to replace a newer installed ZFS module with an
+older package version. Check what APT will select first:
+```
+apt-cache policy zfs-dkms zfsutils-linux zfs-initramfs libzfs6linux libzpool6linux
+sudo apt-get -s install --reinstall zfs-dkms zfsutils-linux zfs-initramfs zfs-zed libzfs6linux libzpool6linux
+```
+
+Proceed only if the simulation moves the ZFS packages to one consistent version
+and does not downgrade them. After the upgrade, rebuild the initramfs for the
+kernel that will boot:
+```
+sudo dkms autoinstall -k "$(uname -r)"
+sudo update-initramfs -u -k "$(uname -r)"
+lsinitramfs "/boot/initrd.img-$(uname -r)" | grep 'zfs.ko'
+```
+
 It is important to have packages and sources in correct version, for current system.
