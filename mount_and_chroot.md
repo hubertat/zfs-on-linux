@@ -114,6 +114,7 @@ sudo zpool set bootfs="$ROOT_DS" "$POOL"
 # Verify the root configuration before rebuilding the initramfs or rebooting.
 sudo zpool get bootfs "$POOL"
 sudo zfs get mountpoint,canmount "$ROOT_DS"
+./verify_zfs_kernel.sh "$(uname -r)"
 ```
 
 ### If you imported the pool in this session and want to detach it:
